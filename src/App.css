@@ -172,3 +172,66 @@ h1 {
   padding: 4px 10px;
   cursor: pointer;
 }
+.input-group input[type="date"] {
+  padding: 10px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+.input-group select {
+  padding: 10px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.priority {
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  border-radius: 20px;
+  margin-left: 8px;
+  font-weight: 600;
+}
+
+.priority-high {
+  background: #fed7d7;
+  color: #c53030;
+}
+
+.priority-medium {
+  background: #fefcbf;
+  color: #b7791f;
+}
+
+.priority-low {
+  background: #c6f6d5;
+  color: #276749;
+}
+
+.due-date {
+  font-size: 0.75rem;
+  color: #718096;
+  margin-left: 8px;
+}
+
+.overdue {
+  font-size: 0.75rem;
+  color: #e53e3e;
+  font-weight: 600;
+  margin-left: 8px;
+}
+
+.todo-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.todo-list li .text {
+  flex: 1 1 100%;
+  margin-bottom: 4px;
+}

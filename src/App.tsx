@@ -8,6 +8,8 @@ interface Todo {
   _id: string;
   text: string;
   done: boolean;
+  dueDate: string;
+  priority: 'low' | 'medium' | 'high';
 }
 
 interface AuthResponse {
@@ -22,6 +24,8 @@ function App() {
   const [isLogin, setIsLogin] = useState<boolean>(true);
   const [todos, setTodos] = useState<Todo[]>([]);
   const [text, setText] = useState<string>('');
+  const [dueDate, setDueDate] = useState<string>('');
+  const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
   const [error, setError] = useState<string>('');
 
   const authAxios = axios.create({
@@ -61,8 +65,10 @@ function App() {
   const addTodo = async (e: FormEvent): Promise<void> => {
     e.preventDefault();
     if (!text.trim()) return;
-    await authAxios.post('/todos', { text });
+    await authAxios.post('/todos', { text, dueDate, priority });
     setText('');
+    setDueDate('');
+    setPriority('medium');
     fetchTodos();
   };
 
@@ -82,6 +88,19 @@ function App() {
     setTodos([]);
   };
 
+  const priorityLabel = (p: string) => {
+    if (p === 'high') return '🔴 High';
+    if (p === 'low') return '🟢 Low';
+    return '🟡 Medium';
+  };
+
+  const isOverdue = (todo: Todo): boolean => {
+    if (!todo.dueDate || todo.done) return false;
+    const today = new Date().toISOString().split('T')[0];
+    return todo.dueDate < today;
+  };
+
+  // LOGIN / SIGNUP
   if (!token) {
     return (
       <div className="app">
@@ -111,6 +130,7 @@ function App() {
     );
   }
 
+  // TODO SCREEN
   return (
     <div className="app">
       <div className="header">
@@ -124,13 +144,31 @@ function App() {
           onChange={(e) => setText(e.target.value)}
           placeholder="Add a new todo..."
         />
+        <input
+          type="date"
+          value={dueDate}
+          onChange={(e) => setDueDate(e.target.value)}
+        />
+        <select value={priority} onChange={(e) => setPriority(e.target.value as 'low' | 'medium' | 'high')}>
+          <option value="low">🟢 Low</option>
+          <option value="medium">🟡 Medium</option>
+          <option value="high">🔴 High</option>
+        </select>
         <button type="submit">Add</button>
       </form>
 
       <ul className="todo-list">
         {todos.map((todo) => (
           <li key={todo._id} className={todo.done ? 'done' : ''}>
-            <span onClick={() => toggleTodo(todo)}>{todo.text}</span>
+            <span className="text" onClick={() => toggleTodo(todo)}>{todo.text}</span>
+            <span className={`priority priority-${todo.priority}`}>
+              {priorityLabel(todo.priority)}
+            </span>
+            {todo.dueDate && (
+              <span className={isOverdue(todo) ? 'overdue' : 'due-date'}>
+                📅 {todo.dueDate} {isOverdue(todo) && '⚠️'}
+              </span>
+            )}
             <button onClick={() => deleteTodo(todo._id)}>✕</button>
           </li>
         ))}
