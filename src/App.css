@@ -9,9 +9,9 @@ body {
   background: #f0f4f8;
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   min-height: 100vh;
-  padding: 20px;
+  padding: 40px 20px;
 }
 
 .app {
@@ -20,7 +20,7 @@ body {
   border-radius: 16px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
   width: 100%;
-  max-width: 500px;
+  max-width: 700px;
 }
 
 h1 {
@@ -33,7 +33,7 @@ h1 {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .header h1 {
@@ -95,10 +95,6 @@ h1 {
   font-size: 0.9rem;
 }
 
-.switch:hover {
-  text-decoration: underline;
-}
-
 .error {
   color: #e53e3e;
   text-align: center;
@@ -106,23 +102,48 @@ h1 {
   font-size: 0.9rem;
 }
 
-.input-group {
+.stats {
   display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
+  justify-content: space-around;
+  background: #edf2f7;
+  padding: 12px;
+  border-radius: 10px;
+  margin-bottom: 16px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #4a5568;
 }
 
-.input-group input {
+.input-group {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.input-group input[type="text"],
+.input-group input:not([type]) {
   flex: 1;
+  min-width: 150px;
   padding: 10px 14px;
   border: 2px solid #e2e8f0;
   border-radius: 8px;
-  font-size: 1rem;
+  font-size: 0.95rem;
 }
 
-.input-group input:focus {
-  border-color: #5a67d8;
-  outline: none;
+.input-group input[type="date"] {
+  padding: 10px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+.input-group select {
+  padding: 10px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
 }
 
 .input-group button {
@@ -139,6 +160,52 @@ h1 {
   background: #4c51bf;
 }
 
+.controls {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.search {
+  flex: 1;
+  min-width: 150px;
+  padding: 8px 14px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+.filters {
+  display: flex;
+  gap: 6px;
+}
+
+.filters button {
+  padding: 6px 14px;
+  background: #edf2f7;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #4a5568;
+}
+
+.filters button.active {
+  background: #5a67d8;
+  color: #fff;
+}
+
+.controls select {
+  padding: 8px 12px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
 .todo-list {
   list-style: none;
   padding: 0;
@@ -146,52 +213,36 @@ h1 {
 
 .todo-list li {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
   padding: 12px 16px;
   background: #f7fafc;
   border-radius: 8px;
   margin-bottom: 8px;
 }
 
-.todo-list li.done span {
+.todo-list li.done .text {
   text-decoration: line-through;
   color: #a0aec0;
 }
 
-.todo-list li span {
-  flex: 1;
+.todo-list li .text {
+  flex: 1 1 100%;
   cursor: pointer;
+  margin-bottom: 4px;
 }
 
-.todo-list li button {
-  background: #e53e3e;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  padding: 4px 10px;
-  cursor: pointer;
-}
-.input-group input[type="date"] {
-  padding: 10px;
-  border: 2px solid #e2e8f0;
-  border-radius: 8px;
-  font-size: 0.9rem;
-}
-
-.input-group select {
-  padding: 10px;
-  border: 2px solid #e2e8f0;
-  border-radius: 8px;
-  font-size: 0.9rem;
-  cursor: pointer;
+.todo-list li.empty {
+  justify-content: center;
+  color: #a0aec0;
+  font-style: italic;
 }
 
 .priority {
   font-size: 0.75rem;
   padding: 4px 10px;
   border-radius: 20px;
-  margin-left: 8px;
   font-weight: 600;
 }
 
@@ -213,25 +264,63 @@ h1 {
 .due-date {
   font-size: 0.75rem;
   color: #718096;
-  margin-left: 8px;
 }
 
 .overdue {
   font-size: 0.75rem;
   color: #e53e3e;
   font-weight: 600;
-  margin-left: 8px;
 }
 
-.todo-list li {
+.edit-btn,
+.delete-btn,
+.save-btn,
+.cancel-btn {
+  border: none;
+  border-radius: 6px;
+  padding: 4px 10px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.edit-btn {
+  background: #edf2f7;
+}
+
+.edit-btn:hover {
+  background: #e2e8f0;
+}
+
+.delete-btn {
+  background: #fed7d7;
+  color: #c53030;
+}
+
+.delete-btn:hover {
+  background: #feb2b2;
+}
+
+.save-btn {
+  background: #38a169;
+  color: #fff;
+}
+
+.cancel-btn {
+  background: #e2e8f0;
+}
+
+.edit-row {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
   gap: 6px;
+  width: 100%;
+  flex-wrap: wrap;
 }
 
-.todo-list li .text {
-  flex: 1 1 100%;
-  margin-bottom: 4px;
+.edit-row input {
+  flex: 1;
+  min-width: 100px;
+  padding: 6px 10px;
+  border: 2px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 0.9rem;
 }

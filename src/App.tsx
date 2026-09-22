@@ -10,12 +10,15 @@ interface Todo {
   done: boolean;
   dueDate: string;
   priority: 'low' | 'medium' | 'high';
+  createdAt: string;
 }
 
 interface AuthResponse {
   token: string;
   email: string;
 }
+
+type Filter = 'all' | 'active' | 'completed';
 
 function App() {
   const [token, setToken] = useState<string>(localStorage.getItem('token') || '');
@@ -27,6 +30,13 @@ function App() {
   const [dueDate, setDueDate] = useState<string>('');
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
   const [error, setError] = useState<string>('');
+  const [filter, setFilter] = useState<Filter>('all');
+  const [search, setSearch] = useState<string>('');
+  const [sortBy, setSortBy] = useState<'newest' | 'dueDate' | 'priority'>('newest');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editText, setEditText] = useState<string>('');
+  const [editDueDate, setEditDueDate] = useState<string>('');
+  const [editPriority, setEditPriority] = useState<'low' | 'medium' | 'high'>('medium');
 
   const authAxios = axios.create({
     baseURL: API,
@@ -35,12 +45,29 @@ function App() {
 
   useEffect(() => {
     if (token) fetchTodos();
-  }, [token]);
+  }, [token, filter, search, sortBy]);
 
   const fetchTodos = async (): Promise<void> => {
     try {
-      const res = await authAxios.get<Todo[]>('/todos');
-      setTodos(res.data);
+      const params: Record<string, string> = {};
+      if (filter !== 'all') params.filter = filter;
+      if (search) params.search = search;
+
+      const res = await authAxios.get<Todo[]>('/todos', { params });
+      let sorted = [...res.data];
+
+      if (sortBy === 'dueDate') {
+        sorted.sort((a, b) => {
+          if (!a.dueDate) return 1;
+          if (!b.dueDate) return -1;
+          return a.dueDate.localeCompare(b.dueDate);
+        });
+      } else if (sortBy === 'priority') {
+        const order = { high: 0, medium: 1, low: 2 };
+        sorted.sort((a, b) => order[a.priority] - order[b.priority]);
+      }
+
+      setTodos(sorted);
     } catch {
       logout();
     }
@@ -78,8 +105,31 @@ function App() {
   };
 
   const deleteTodo = async (id: string): Promise<void> => {
+    if (!window.confirm('Delete this todo?')) return;
     await authAxios.delete(`/todos/${id}`);
     fetchTodos();
+  };
+
+  const startEdit = (todo: Todo): void => {
+    setEditingId(todo._id);
+    setEditText(todo.text);
+    setEditDueDate(todo.dueDate || '');
+    setEditPriority(todo.priority);
+  };
+
+  const saveEdit = async (): Promise<void> => {
+    if (!editingId) return;
+    await authAxios.put(`/todos/${editingId}`, {
+      text: editText,
+      dueDate: editDueDate,
+      priority: editPriority
+    });
+    setEditingId(null);
+    fetchTodos();
+  };
+
+  const cancelEdit = (): void => {
+    setEditingId(null);
   };
 
   const logout = (): void => {
@@ -88,7 +138,7 @@ function App() {
     setTodos([]);
   };
 
-  const priorityLabel = (p: string) => {
+  const priorityLabel = (p: string): string => {
     if (p === 'high') return '🔴 High';
     if (p === 'low') return '🟢 Low';
     return '🟡 Medium';
@@ -100,7 +150,12 @@ function App() {
     return todo.dueDate < today;
   };
 
-  // LOGIN / SIGNUP
+  const stats = {
+    total: todos.length,
+    done: todos.filter(t => t.done).length,
+    pending: todos.filter(t => !t.done).length
+  };
+
   if (!token) {
     return (
       <div className="app">
@@ -130,12 +185,17 @@ function App() {
     );
   }
 
-  // TODO SCREEN
   return (
     <div className="app">
       <div className="header">
         <h1>📝 My Todos</h1>
         <button onClick={logout} className="logout-btn">Logout</button>
+      </div>
+
+      <div className="stats">
+        <span>📊 Total: {stats.total}</span>
+        <span>✅ Done: {stats.done}</span>
+        <span>⏳ Pending: {stats.pending}</span>
       </div>
 
       <form onSubmit={addTodo} className="input-group">
@@ -144,11 +204,7 @@ function App() {
           onChange={(e) => setText(e.target.value)}
           placeholder="Add a new todo..."
         />
-        <input
-          type="date"
-          value={dueDate}
-          onChange={(e) => setDueDate(e.target.value)}
-        />
+        <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
         <select value={priority} onChange={(e) => setPriority(e.target.value as 'low' | 'medium' | 'high')}>
           <option value="low">🟢 Low</option>
           <option value="medium">🟡 Medium</option>
@@ -157,19 +213,54 @@ function App() {
         <button type="submit">Add</button>
       </form>
 
+      <div className="controls">
+        <input
+          className="search"
+          placeholder="🔍 Search todos..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <div className="filters">
+          <button className={filter === 'all' ? 'active' : ''} onClick={() => setFilter('all')}>All</button>
+          <button className={filter === 'active' ? 'active' : ''} onClick={() => setFilter('active')}>Active</button>
+          <button className={filter === 'completed' ? 'active' : ''} onClick={() => setFilter('completed')}>Done</button>
+        </div>
+        <select value={sortBy} onChange={(e) => setSortBy(e.target.value as 'newest' | 'dueDate' | 'priority')}>
+          <option value="newest">Newest</option>
+          <option value="dueDate">By Due Date</option>
+          <option value="priority">By Priority</option>
+        </select>
+      </div>
+
       <ul className="todo-list">
+        {todos.length === 0 && <li className="empty">No todos found</li>}
         {todos.map((todo) => (
           <li key={todo._id} className={todo.done ? 'done' : ''}>
-            <span className="text" onClick={() => toggleTodo(todo)}>{todo.text}</span>
-            <span className={`priority priority-${todo.priority}`}>
-              {priorityLabel(todo.priority)}
-            </span>
-            {todo.dueDate && (
-              <span className={isOverdue(todo) ? 'overdue' : 'due-date'}>
-                📅 {todo.dueDate} {isOverdue(todo) && '⚠️'}
-              </span>
+            {editingId === todo._id ? (
+              <div className="edit-row">
+                <input value={editText} onChange={(e) => setEditText(e.target.value)} />
+                <input type="date" value={editDueDate} onChange={(e) => setEditDueDate(e.target.value)} />
+                <select value={editPriority} onChange={(e) => setEditPriority(e.target.value as 'low' | 'medium' | 'high')}>
+                  <option value="low">🟢 Low</option>
+                  <option value="medium">🟡 Medium</option>
+                  <option value="high">🔴 High</option>
+                </select>
+                <button onClick={saveEdit} className="save-btn">✓</button>
+                <button onClick={cancelEdit} className="cancel-btn">✕</button>
+              </div>
+            ) : (
+              <>
+                <span className="text" onClick={() => toggleTodo(todo)}>{todo.text}</span>
+                <span className={`priority priority-${todo.priority}`}>{priorityLabel(todo.priority)}</span>
+                {todo.dueDate && (
+                  <span className={isOverdue(todo) ? 'overdue' : 'due-date'}>
+                    📅 {todo.dueDate} {isOverdue(todo) && '⚠️'}
+                  </span>
+                )}
+                <button className="edit-btn" onClick={() => startEdit(todo)}>✏️</button>
+                <button className="delete-btn" onClick={() => deleteTodo(todo._id)}>✕</button>
+              </>
             )}
-            <button onClick={() => deleteTodo(todo._id)}>✕</button>
           </li>
         ))}
       </ul>
